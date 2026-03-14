@@ -34,7 +34,7 @@ namespace DonationClipSystem.Services
             if (string.IsNullOrEmpty(_channelId))
                 _channelId = await FetchChannelIdAsync();
             if (string.IsNullOrEmpty(_channelId))
-                throw new Exception("Channel-ID nicht lesbar. Token korrekt?");
+                throw new Exception("Cannot read Channel-ID. Token correct?");
 
             Log($"[SE] Channel-ID: {_channelId}");
             await Task.WhenAll(ConnectAstroAsync(), ConnectRealtimeAsync());
@@ -84,7 +84,7 @@ namespace DonationClipSystem.Services
                     string? err = json["error"]?.ToString();
                     Log(string.IsNullOrEmpty(err)
                         ? $"[SE-Astro] ✓ Subscribed: {json["data"]?["topic"]}"
-                        : $"[SE-Astro] Fehler: {err}");
+                        : $"[SE-Astro] Error: {err}");
                 }
                 else if (type == "message" && topic == "channel.tips")
                 {
@@ -92,7 +92,7 @@ namespace DonationClipSystem.Services
                     FireDonation(d);
                 }
             }
-            catch (Exception ex) { Log($"[SE-Astro] Parse-Fehler: {ex.Message}"); }
+            catch (Exception ex) { Log($"[SE-Astro] Parse error: {ex.Message}"); }
         }
 
         // ─── Realtime / Socket.IO (Test & Emulate) ───────────────────────────
@@ -118,7 +118,7 @@ namespace DonationClipSystem.Services
             });
             _realtimeClient.MessageReceived.Subscribe(HandleRealtimeMessage);
             await _realtimeClient.Start();
-            Log("[SE-Realtime] Verbinde (für Test-Events)...");
+            Log("[SE-Realtime] Connecting (for test events)...");
         }
 
         private void HandleRealtimeMessage(ResponseMessage msg)
@@ -139,7 +139,7 @@ namespace DonationClipSystem.Services
             // Socket.IO connect packet
             if (text == "40" || text.StartsWith("40{"))
             {
-                Log("[SE-Realtime] Socket.IO connected → Authentifiziere...");
+                Log("[SE-Realtime] Socket.IO connected → Authenticating...");
                 AuthenticateRealtime();
                 return;
             }
@@ -158,11 +158,11 @@ namespace DonationClipSystem.Services
                 {
                     case "authenticated":
                         _realtimeAuthenticated = true;
-                        Log("[SE-Realtime] ✓ Authentifiziert — empfängt Test-Events");
+                        Log("[SE-Realtime] ✓ Authentifiziert — receiving test events");
                         break;
 
                     case "unauthorized":
-                        Log("[SE-Realtime] ✗ Nicht autorisiert — Token falsch?");
+                        Log("[SE-Realtime] ✗ Unauthorized — wrong token?");
                         break;
 
                     case "event":
@@ -172,7 +172,7 @@ namespace DonationClipSystem.Services
                         break;
                 }
             }
-            catch (Exception ex) { Log($"[SE-Realtime] Parse-Fehler: {ex.Message}"); }
+            catch (Exception ex) { Log($"[SE-Realtime] Parse error: {ex.Message}"); }
         }
 
         private void AuthenticateRealtime()
@@ -184,7 +184,7 @@ namespace DonationClipSystem.Services
                 ["token"] = _jwt, ["method"] = "jwt"
             };
             string packet = "42" + new JArray("authenticate", payload).ToString(Formatting.None);
-            Log($"[SE-Realtime] Auth-Packet senden");
+            Log($"[SE-Realtime] Sending auth packet");
             _realtimeClient?.Send(packet);
         }
 
@@ -192,7 +192,7 @@ namespace DonationClipSystem.Services
         {
             if (data == null) return;
             string? type = data["type"]?.ToString();
-            if (type != "tip") { Log($"[SE-Realtime] Kein Tip: type={type}"); return; }
+            if (type != "tip") { Log($"[SE-Realtime] Not a tip: type={type}"); return; }
             var d = data["data"] ?? data;
             FireDonation(d);
         }
@@ -246,7 +246,7 @@ namespace DonationClipSystem.Services
                 var obj = JObject.Parse(await http.GetStringAsync($"{ApiBase}/channels/me"));
                 return obj["_id"]?.ToString();
             }
-            catch (Exception ex) { Log($"[SE] API-Fehler: {ex.Message}"); return null; }
+            catch (Exception ex) { Log($"[SE] API-Error: {ex.Message}"); return null; }
         }
 
         private void Log(string msg) => LogMessage?.Invoke(msg);

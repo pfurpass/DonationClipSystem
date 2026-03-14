@@ -49,7 +49,7 @@ namespace DonationClipSystem.Services
             _client.MessageReceived.Subscribe(HandleMessage);
 
             await _client.Start();
-            Log("Verbinde mit Tipestream...");
+            Log("Connecting to Tipestream...");
         }
 
         private static async Task<string> GetSocketHostAsync()
@@ -100,7 +100,7 @@ namespace DonationClipSystem.Services
                         break;
                 }
             }
-            catch (Exception ex) { Log($"[Tipestream] Parse-Fehler: {ex.Message}"); }
+            catch (Exception ex) { Log($"[Tipestream] Parse error: {ex.Message}"); }
         }
 
         private void JoinRoom()
@@ -112,7 +112,7 @@ namespace DonationClipSystem.Services
                     ["username"] = ""
                 });
             _client?.Send("42" + payload.ToString());
-            Log("[Tipestream] join-room gesendet");
+            Log("[Tipestream] join-room sent");
         }
 
         private void HandleDonationEvent(JToken? data)
@@ -120,7 +120,7 @@ namespace DonationClipSystem.Services
             if (data == null) return;
 
             string? type = data["event"]?["type"]?.ToString();
-            if (type != "donation") { Log($"[TS] Ignoriert: {type}"); return; }
+            if (type != "donation") { Log($"[TS] Ignored: {type}"); return; }
 
             var parameters = data["event"]?["parameters"];
             if (parameters == null) return;
@@ -130,7 +130,7 @@ namespace DonationClipSystem.Services
             string  message  = parameters["message"]?.ToString()         ?? string.Empty;
             string  currency = parameters["currency"]?.ToString()        ?? "EUR";
 
-            Log($"[Tipestream] Spende: {amount} {currency} von {donor}");
+            Log($"[Tipestream] Donation: {amount} {currency} von {donor}");
 
             string? ytUrl = YouTubeHelper.FindYouTubeUrlInText(message);
 

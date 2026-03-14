@@ -22,10 +22,10 @@ namespace DonationClipSystem.Services
         public void Enqueue(DonationEvent donation)
         {
             var clip = BuildClip(donation);
-            if (clip == null) { Log($"[Queue] Kein YouTube-Link gefunden für {donation.DonorName}"); return; }
+            if (clip == null) { Log($"[Queue] No YouTube link found for {donation.DonorName}"); return; }
 
             lock (_lock) { _queue.Enqueue(clip); }
-            Log($"[Queue] Eingereiht für {donation.DonorName} (Queue: {_queue.Count})");
+            Log($"[Queue] Queued for {donation.DonorName} (Queue: {_queue.Count})");
             TryPlayNext();
         }
 
@@ -58,7 +58,7 @@ namespace DonationClipSystem.Services
                 if (_isPlaying || _queue.Count == 0) return;
                 _isPlaying = true;
                 var clip = _queue.Dequeue();
-                Log($"[Queue] Spiele: {clip.YouTubeVideoId} für {clip.DonorName}");
+                Log($"[Queue] Playing: {clip.YouTubeVideoId} für {clip.DonorName}");
                 int ms = (clip.MaxDurationSeconds + 2) * 1000;
                 _finishTimer?.Dispose();
                 _finishTimer = new System.Threading.Timer(_ => OnFinished(), null, ms, Timeout.Infinite);
@@ -68,7 +68,7 @@ namespace DonationClipSystem.Services
 
         private void OnFinished()
         {
-            Log("[Queue] Clip beendet");
+            Log("[Queue] Clip finished");
             lock (_lock) { _isPlaying = false; }
             ClipFinished?.Invoke();
             TryPlayNext();
@@ -76,7 +76,7 @@ namespace DonationClipSystem.Services
 
         public void NotifyClipEnded() { _finishTimer?.Dispose(); OnFinished(); }
         public void Skip()            { _finishTimer?.Dispose(); OnFinished(); }
-        public void Clear()           { lock (_lock) { _queue.Clear(); } Log("[Queue] Geleert"); }
+        public void Clear()           { lock (_lock) { _queue.Clear(); } Log("[Queue] Cleared"); }
         private void Log(string m)    => LogMessage?.Invoke(m);
 
         public void Dispose()

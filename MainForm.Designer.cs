@@ -59,9 +59,9 @@ namespace DonationClipSystem
 
             int y = 16; int lx = 14, cx = 130, cw = 178;
 
-            AddLabel("⚙  Einstellungen", lx, y, 290, 22, true, 11f); y += 34;
+            AddLabel("⚙  Settings", lx, y, 290, 22, true, 11f); y += 34;
 
-            lblPlatform   = AddLabel("Plattform:", lx, y, 110, 22);
+            lblPlatform   = AddLabel("Platform:", lx, y, 110, 22);
             comboPlatform = new ComboBox
             {
                 Location = new Point(cx, y), Size = new Size(cw, 26),
@@ -86,7 +86,7 @@ namespace DonationClipSystem
 
             chkSaveToken = new CheckBox
             {
-                Text = "Token in config.json speichern",
+                Text = "Save token to config.json",
                 Location = new Point(cx, y), Size = new Size(cw, 20),
                 ForeColor = silver, Checked = true
             };
@@ -95,7 +95,7 @@ namespace DonationClipSystem
 
             panelSettings.Controls.Add(MakeSep(lx, y, 292)); y += 16;
 
-            lblMinDonation = AddLabel("Min. Spende (€):", lx, y, 118, 22);
+            lblMinDonation = AddLabel("Min. Donation (€):", lx, y, 118, 22);
             numMinDonation = new NumericUpDown
             {
                 Location = new Point(cx, y), Size = new Size(90, 26),
@@ -105,7 +105,7 @@ namespace DonationClipSystem
             panelSettings.Controls.Add(numMinDonation);
             y += 32;
 
-            lblMaxLength = AddLabel("Max. Cliplänge (s):", lx, y, 118, 22);
+            lblMaxLength = AddLabel("Max Clip Length (s):", lx, y, 118, 22);
             numMaxLength = new NumericUpDown
             {
                 Location = new Point(cx, y), Size = new Size(90, 26),
@@ -137,14 +137,14 @@ namespace DonationClipSystem
             };
             panelSettings.Controls.Add(lblOverlayUrl);
 
-            btnCopyOverlay = MakeBtn("📋 Kopieren", lx + 214, y + 4, 94, 26);
+            btnCopyOverlay = MakeBtn("📋 Copy", lx + 214, y + 4, 94, 26);
             btnCopyOverlay.Click += btnCopyOverlay_Click;
             y += 48;
 
             panelSettings.Controls.Add(MakeSep(lx, y, 292)); y += 16;
 
-            btnSave    = MakeBtn("💾 Speichern",  lx,       y, 140, 34);
-            btnConnect = MakeBtn("▶ Verbinden",   lx + 148, y, 160, 34);
+            btnSave    = MakeBtn("💾 Save",  lx,       y, 140, 34);
+            btnConnect = MakeBtn("▶ Connect",   lx + 148, y, 160, 34);
             btnConnect.BackColor = green;
             btnSave.Click    += btnSave_Click;
             btnConnect.Click += btnConnect_Click;
@@ -169,7 +169,7 @@ namespace DonationClipSystem
 
             lblPlayerTitle = new Label
             {
-                Text = "🎥  Preview Player (nur für Streamer)",
+                Text = "🎥  Preview Player (Streamer Only)",
                 Location = new Point(8, 6), Size = new Size(540, 20),
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),

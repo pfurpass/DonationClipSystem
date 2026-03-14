@@ -67,7 +67,7 @@ namespace DonationClipSystem
                 _webView.CoreWebView2.Navigate("about:blank");
 
                 _webViewReady = true;
-                LogAppend("[WebView2] ✓ Bereit");
+                LogAppend("[WebView2] ✓ Ready");
             }
             catch (Exception ex)
             {
@@ -124,11 +124,11 @@ namespace DonationClipSystem
             SaveConfigFromUI();
             if (string.IsNullOrWhiteSpace(_config.Token))
             {
-                MessageBox.Show("Bitte API Token eingeben.", "Fehlt", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please enter your API token.", "Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             btnConnect.Enabled = false;
-            btnConnect.Text    = "Verbinde…";
+            btnConnect.Text    = "Connecting…";
             try
             {
                 if (_config.Platform == StreamPlatform.StreamElements)
@@ -148,15 +148,15 @@ namespace DonationClipSystem
                     await _tsService.ConnectAsync();
                 }
                 _isConnected         = true;
-                btnConnect.Text      = "⬛ Trennen";
+                btnConnect.Text      = "⬛ Disconnect";
                 btnConnect.BackColor = Color.FromArgb(160, 30, 30);
             }
             catch (Exception ex)
             {
                 LogAppend($"[FEHLER] {ex.Message}");
-                btnConnect.Text      = "▶ Verbinden";
+                btnConnect.Text      = "▶ Connect";
                 btnConnect.BackColor = Color.FromArgb(0, 120, 60);
-                MessageBox.Show(ex.Message, "Verbindungsfehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Connection error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally { btnConnect.Enabled = true; }
         }
@@ -166,9 +166,9 @@ namespace DonationClipSystem
             _seService?.Disconnect();
             _tsService?.Disconnect();
             _isConnected         = false;
-            btnConnect.Text      = "▶ Verbinden";
+            btnConnect.Text      = "▶ Connect";
             btnConnect.BackColor = Color.FromArgb(0, 120, 60);
-            LogAppend("Getrennt.");
+            LogAppend("Disconnected.");
         }
 
         private void HandleDonation(DonationEvent donation)
@@ -181,12 +181,12 @@ namespace DonationClipSystem
 
                 if (donation.Amount < _config.MinDonation)
                 {
-                    LogAppend($"   Ignoriert (unter Minimum {_config.MinDonation})");
+                    LogAppend($"   Ignored (below minimum {_config.MinDonation})");
                     return;
                 }
                 if (string.IsNullOrEmpty(donation.YouTubeUrl))
                 {
-                    LogAppend("   Kein YouTube-Link in Nachricht");
+                    LogAppend("   No YouTube link in message");
                     return;
                 }
                 lblQueueCount.Text = $"Queue: {(_queueService?.QueueCount ?? 0) + 1}";
@@ -198,7 +198,7 @@ namespace DonationClipSystem
 
         private void PlayClip(ClipItem clip)
         {
-            if (!_webViewReady) { LogAppend("WebView2 nicht bereit!"); return; }
+            if (!_webViewReady) { LogAppend("WebView2 not ready!"); return; }
             _currentClip = clip;
             _overlayServer?.SendPlay(clip);
 
@@ -223,7 +223,7 @@ namespace DonationClipSystem
         private void btnTest_Click(object sender, EventArgs e)
         {
             SaveConfigFromUI();
-            if (!_webViewReady) { LogAppend("WebView2 noch nicht bereit!"); return; }
+            if (!_webViewReady) { LogAppend("WebView2 not ready yet!"); return; }
             HandleDonation(new DonationEvent
             {
                 DonorName  = "TestUser",
@@ -236,12 +236,12 @@ namespace DonationClipSystem
 
         private void btnSkip_Click(object sender, EventArgs e)  => _queueService?.Skip();
         private void btnClear_Click(object sender, EventArgs e) { _queueService?.Clear(); lblQueueCount.Text = "Queue: 0"; }
-        private void btnSave_Click(object sender, EventArgs e)  { SaveConfigFromUI(); LogAppend("Gespeichert."); }
+        private void btnSave_Click(object sender, EventArgs e)  { SaveConfigFromUI(); LogAppend("Settings saved."); }
 
         private void btnCopyOverlay_Click(object sender, EventArgs e)
         {
             Clipboard.SetText($"http://localhost:{_config.OverlayPort}/overlay");
-            toolTip.Show("Kopiert!", btnCopyOverlay, 0, -20, 1500);
+            toolTip.Show("Copied!", btnCopyOverlay, 0, -20, 1500);
         }
 
         private void comboPlatform_SelectedIndexChanged(object sender, EventArgs e)

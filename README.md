@@ -1,6 +1,14 @@
 # DonationClipSystem
 
-A C# WinForms application for streamers that monitors donations from **StreamElements** or **Tipestream** and automatically plays video clips — both in OBS (via a browser source overlay) and in a local streamer preview window.
+A C# WinForms application for streamers that monitors donations from **StreamElements** or **Tipestream** and automatically plays YouTube clips — both in OBS (via a browser source overlay) and in a local streamer preview window.
+
+---
+
+## Preview
+
+![Program](github_img/programm.png)
+
+![OBS Overlay](github_img/testclip.png)
 
 ---
 
@@ -8,9 +16,9 @@ A C# WinForms application for streamers that monitors donations from **StreamEle
 
 | Component | Version |
 |---|---|
-| .NET SDK | 6.0 or later |
+| .NET SDK | 8.0 or later |
 | Windows | 10 / 11 |
-| VLC | Bundled via NuGet (VideoLAN.LibVLC.Windows) |
+| WebView2 Runtime | Included in Windows 11 / [Download](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) |
 | OBS Studio | Any recent version |
 
 ---
@@ -25,36 +33,36 @@ dotnet restore
 dotnet build -c Release
 ```
 
-Or open `DonationClipSystem.csproj` in Visual Studio 2022.
-
 ### 2. Run
 
 ```
 dotnet run
-# or double-click the Release .exe
 ```
 
 ### 3. Configure
 
-Fill in the **Settings** panel on the left:
-
 | Setting | Description |
 |---|---|
 | Platform | StreamElements or Tipestream |
-| API Token | StreamElements JWT token **or** Tipestream API key |
+| JWT Token / API Key | Your platform token |
 | Save Token | Tick to persist token in `config.json` |
 | Min. Donation | Minimum amount that triggers a clip |
-| Max Clip Length | How many seconds of the clip to play (max) |
-| Clip Source | Local folder, YouTube link, or random from folder |
+| Max Clip Length | How many seconds of the clip to play |
 
 ### 4. Add OBS Browser Source
 
-1. In OBS, add a **Browser Source**.
+1. In OBS, add a **Browser Source**
 2. Set URL to: `http://localhost:5000/overlay`
-3. Set width/height to your stream resolution (e.g. 1920×1080).
-4. Tick **Refresh browser when scene becomes active**.
+3. Set width/height to your stream resolution (e.g. 1920×1080)
+4. Tick **Refresh browser when scene becomes active**
 
-> **Tip:** The overlay page background is transparent, so it works as an overlay on top of your normal scene.
+---
+
+## How it works
+
+Donors include a YouTube link in their donation message. The app detects it automatically and plays the clip — in OBS for viewers, and in the preview player for the streamer.
+
+**Preview player is muted** — audio plays only in the OBS overlay.
 
 ---
 
@@ -62,19 +70,18 @@ Fill in the **Settings** panel on the left:
 
 ### StreamElements
 1. Log in at [streamelements.com](https://streamelements.com)
-2. Go to **Account → Show Secrets**
-3. Copy your **JWT Token**
+2. Click your avatar (top right) → select your channel
+3. Toggle **Show Secrets**
+4. Copy your **JWT Token**
 
 ### Tipestream
 1. Log in at [tipeeestream.com](https://tipeeestream.com)
-2. Go to your profile → **API Key**
+2. Dashboard → **API Key**
 3. Copy your API key
 
 ---
 
 ## YouTube URL Support
-
-Paste any YouTube URL into the **YouTube Link** field, or have donors include a link in their donation message. The app recognises all standard formats:
 
 | Format | Start time |
 |---|---|
@@ -83,19 +90,11 @@ Paste any YouTube URL into the **YouTube Link** field, or have donors include a 
 | `https://youtu.be/abc123?t=1m30s` | 90s |
 | `https://youtube.com/watch?v=abc123&t=1h2m3s` | 3723s |
 
-The clip plays from the timestamp up to `timestamp + Max Clip Length`.
-
----
-
-## Local Video Folder
-
-Place `.mp4`, `.webm`, `.mov`, `.avi`, or `.mkv` files in a folder and point the app to it. A random file is chosen for each donation.
-
 ---
 
 ## Donation Queue
 
-Multiple donations are queued and played back-to-back. Use **⏭ Skip** to skip the current clip, or **🗑 Clear** to empty the queue.
+Multiple donations are queued and played back-to-back. Use **⏭ Skip** to skip the current clip or **🗑 Clear** to empty the queue.
 
 ---
 
@@ -105,24 +104,25 @@ Multiple donations are queued and played back-to-back. Use **⏭ Skip** to skip 
 DonationClipSystem (WinForms)
 │
 ├── OverlayServer
-│   ├── HTTP  → http://localhost:5000/overlay  (serves overlay.html + video files)
-│   └── WS    → ws://localhost:5001             (pushes play/stop events)
+│   ├── HTTP  → http://localhost:5000/overlay   (overlay.html + player.html)
+│   └── WS    → ws://localhost:5000/ws          (play/stop events to OBS)
 │
-├── StreamElementsService   ← WebSocket to StreamElements realtime API
-├── TipestreamService       ← WebSocket to Tipestream Socket.IO API
+├── StreamElementsService
+│   ├── wss://astro.streamelements.com          (real donations)
+│   └── wss://realtime.streamelements.com       (test/emulate events)
 │
-├── ClipQueueService        ← Manages clip queue and playback timing
+├── TipestreamService
+│   └── Socket.IO via dynamic host from API
+│
+├── ClipQueueService        ← Queue + playback timing
 │
 └── MainForm
-    ├── VLC VideoView       ← Local preview for local files
-    └── WebBrowser          ← Local preview for YouTube embeds
+    └── WebView2            ← Local preview (muted) + YouTube IFrame API
 ```
 
 ---
 
 ## config.json
-
-Saved automatically in the application folder:
 
 ```json
 {
@@ -131,12 +131,8 @@ Saved automatically in the application folder:
   "saveToken": true,
   "minDonation": 5.0,
   "maxVideoLength": 30,
-  "clipSource": "RandomFromFolder",
-  "clipFolder": "C:\\DonationClips",
-  "youtubeLink": "",
   "overlayPort": 5000,
-  "wsPort": 5001,
-  "showDonorName": true
+  "wsPort": 5001
 }
 ```
 
@@ -146,28 +142,18 @@ Saved automatically in the application folder:
 
 | Package | Purpose |
 |---|---|
-| `LibVLCSharp` + `LibVLCSharp.WinForms` | Local video playback |
-| `VideoLAN.LibVLC.Windows` | VLC native binaries |
-| `Newtonsoft.Json` | JSON config serialization |
-| `Websocket.Client` | Connect to StreamElements/Tipestream WS APIs |
-| `Fleck` | Serve WebSocket connections to the overlay |
+| `Microsoft.Web.WebView2` | YouTube playback in preview |
+| `Newtonsoft.Json` | JSON config |
+| `Websocket.Client` | StreamElements / Tipestream WS |
 
 ---
 
 ## Troubleshooting
 
-**Overlay is blank in OBS**
-- Make sure the app is running before OBS loads the browser source.
-- Check that port 5000 is not blocked by a firewall.
+**Overlay blank in OBS** → Make sure the app is running before OBS loads the browser source. Check port 5000 is not blocked.
 
-**VLC fails to initialize**
-- Ensure the `VideoLAN.LibVLC.Windows` NuGet package is installed — it bundles the native VLC libs.
-- The app will fall back to YouTube-only mode if VLC fails.
+**WebView2 error on startup** → Install the [WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/).
 
-**StreamElements not receiving events**
-- Double-check your JWT token (not your password).
-- Look at the Event Log panel for error messages.
+**StreamElements not receiving events** → Double-check your JWT token. The app connects to both the Astro gateway (real donations) and the legacy realtime endpoint (test/emulate).
 
-**Tipestream not connecting**
-- Use your **API Key**, not your login credentials.
-- The Tipestream Socket.IO endpoint sometimes changes; check their developer docs if reconnection loops.
+**Tipestream not connecting** → Use your API Key from the dashboard, not your login password.

@@ -58,12 +58,12 @@ namespace DonationClipSystem.Services
             if (ctx.Request.IsWebSocketRequest && path == "ws")
             {
                 var wsCtx = await ctx.AcceptWebSocketAsync(null);
-                var ws    = wsCtx.WebSocket;
+                var ws = wsCtx.WebSocket;
                 lock (_lock) _clients.Add(ws);
-                Log("[WS] Overlay verbunden");
+                Log("[WS] Overlay connected");
                 await WsReceiveLoop(ws);
                 lock (_lock) _clients.Remove(ws);
-                Log("[WS] Overlay getrennt");
+                Log("[WS] Overlay disconnected");
                 return;
             }
 
@@ -97,7 +97,7 @@ namespace DonationClipSystem.Services
             string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", fileName);
             if (!File.Exists(path)) { ctx.Response.StatusCode = 404; ctx.Response.Close(); return; }
             byte[] data = File.ReadAllBytes(path);
-            ctx.Response.ContentType     = mime;
+            ctx.Response.ContentType = mime;
             ctx.Response.ContentLength64 = data.Length;
             ctx.Response.OutputStream.Write(data);
             ctx.Response.Close();
@@ -112,9 +112,9 @@ namespace DonationClipSystem.Services
 
             string mime = Path.GetExtension(file).ToLower() switch
             {
-                ".mp4"  => "video/mp4",
+                ".mp4" => "video/mp4",
                 ".webm" => "video/webm",
-                _       => "application/octet-stream"
+                _ => "application/octet-stream"
             };
             long size = new FileInfo(file).Length;
             string? range = ctx.Request.Headers["Range"];
@@ -124,13 +124,13 @@ namespace DonationClipSystem.Services
             {
                 var parts = range[6..].Split('-');
                 long start = long.Parse(parts[0]);
-                long end   = parts[1].Length > 0 ? long.Parse(parts[1]) : size - 1;
-                long len   = end - start + 1;
-                ctx.Response.StatusCode  = 206;
+                long end = parts[1].Length > 0 ? long.Parse(parts[1]) : size - 1;
+                long len = end - start + 1;
+                ctx.Response.StatusCode = 206;
                 ctx.Response.ContentType = mime;
                 ctx.Response.ContentLength64 = len;
-                ctx.Response.AddHeader("Content-Range",  $"bytes {start}-{end}/{size}");
-                ctx.Response.AddHeader("Accept-Ranges",  "bytes");
+                ctx.Response.AddHeader("Content-Range", $"bytes {start}-{end}/{size}");
+                ctx.Response.AddHeader("Accept-Ranges", "bytes");
                 fs.Seek(start, SeekOrigin.Begin);
                 var buf = new byte[65536];
                 long rem = len;
@@ -155,15 +155,15 @@ namespace DonationClipSystem.Services
         {
             var msg = JsonConvert.SerializeObject(new
             {
-                action    = "play",
-                clipType  = clip.Type.ToString().ToLower(),
-                url       = clip.Type == ClipType.YouTube
+                action = "play",
+                clipType = clip.Type.ToString().ToLower(),
+                url = clip.Type == ClipType.YouTube
                                 ? clip.GetYouTubeEmbedUrl()
                                 : clip.GetLocalFileOverlayUrl(_httpPort),
                 donorName = clip.DonorName,
-                amount    = clip.Amount,
-                currency  = clip.Currency,
-                duration  = clip.MaxDurationSeconds
+                amount = clip.Amount,
+                currency = clip.Currency,
+                duration = clip.MaxDurationSeconds
             });
             Broadcast(msg);
         }
